@@ -1,0 +1,111 @@
+{
+  "name": "adonis5-swagger",
+  "version": "1.0.0",
+  "description": "Swagger provider for AdonisJS 5",
+  "scripts": {
+    "mrm": "mrm --preset=@adonisjs/mrm-preset",
+    "pretest": "npm run lint",
+    "dev": "tsc --watch",
+    "test": "node japaFile.ts",
+    "clean": "del build",
+    "compile": "npm run lint && npm run clean && tsc",
+    "build": "npm run compile",
+    "prepublishOnly": "npm run build",
+    "lint": "eslint . --ext=.ts",
+    "format": "prettier --write .",
+    "commit": "git-cz",
+    "release": "np",
+    "version": "npm run build",
+    "sync-labels": "github-label-sync --labels ./node_modules/@adonisjs/mrm-preset/gh-labels.json reg2005/adonis5-swagger"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reg2005/adonis5-swagger.git"
+  },
+  "keywords": [
+    "Adonis",
+    "5",
+    "adonis-swagger"
+  ],
+  "author": "Evgeniy Ryumin",
+  "contributors": [
+    {
+      "name": "",
+      "email": "example@example.com",
+      "url": "https://example.com"
+    }
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/reg2005/adonis5-swagger/issues"
+  },
+  "homepage": "https://github.com/reg2005/adonis5-swagger#readme",
+  "devDependencies": {
+    "@adonisjs/ace": "^6.9.3",
+    "@adonisjs/core": "^5.0.0-preview-rc-1.9",
+    "@adonisjs/fold": "^6.3.5",
+    "@adonisjs/logger": "^2.0.7",
+    "@adonisjs/mrm-preset": "^2.4.0",
+    "@types/node": "^14.0.24",
+    "commitizen": "^4.1.2",
+    "cz-conventional-changelog": "^3.2.0",
+    "debug": "^4.1.1",
+    "del-cli": "^3.0.1",
+    "doctoc": "^1.4.0",
+    "eslint": "^7.5.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-adonis": "^1.0.14",
+    "eslint-plugin-prettier": "^3.1.4",
+    "github-label-sync": "^2.0.0",
+    "husky": "^4.2.5",
+    "japa": "^3.1.1",
+    "mrm": "^2.3.3",
+    "np": "^6.3.2",
+    "npm-audit-html": "^1.4.1",
+    "prettier": "^2.0.5",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.7",
+    "@poppinss/dev-utils": "^1.0.7"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm audit --production --json | ./node_modules/.bin/npm-audit-html && git add npm-audit.html && doctoc README.md --title='## Table of contents' && git add README.md",
+      "commit-msg": "node ./node_modules/@adonisjs/mrm-preset/validateCommit/conventional/validate.js"
+    }
+  },
+  "nyc": {
+    "exclude": [
+      "test"
+    ],
+    "extension": [
+      ".ts"
+    ]
+  },
+  "main": "build/index.js",
+  "files": [
+    "build/src",
+    "build/index.d.ts",
+    "build/index.js"
+  ],
+  "adonisjs": {
+    "types": "adonis5-swagger",
+    "commands": [
+      "adonis5-swagger/build/commands"
+    ],
+    "providers": [
+      "adonis5-swagger"
+    ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
+  },
+  "np": {
+    "contents": ".",
+    "anyBranch": false
+  },
+  "dependencies": {
+    "swagger-jsdoc": "^4.0.0"
+  }
+}

@@ -1,0 +1,10 @@
+{
+	"compileOnSave": true,
+	"compilerOptions": {
+		"experimentalDecorators": true
+	},
+	"extends": "./node_modules/@adonisjs/mrm-preset/_tsconfig",
+	"files": [
+		"./node_modules/@adonisjs/core/build/adonis-typings/index.d.ts"
+	]
+}
