@@ -20,29 +20,37 @@ export default class SwaggerProvider {
 		const router: typeof Route = this.container.use('Adonis/Core/Route')
 
 		if (config.get('swagger.uiEnabled', true)) {
-			router.get(`/${config.get('swagger.uiUrl', 'docs')}/:fileName?`, async ({ params, response }: HttpContextContract) => {
-				const swaggerUiAssetPath = require('swagger-ui-dist').getAbsoluteFSPath()
-				if (!params.fileName){
-					return response.redirect('/docs/index.html')
-				}
-				let fileName = params.fileName ? params.fileName : 'index.html'
-				const path = join(swaggerUiAssetPath, fileName)
-				const contentType = mime.lookup(path);
-				let data = await promises.readFile(path, 'utf-8')
-				if(fileName.includes('index.html')){
-					//replace default host from index.html
-					data = data.replace("https://petstore.swagger.io/v2/swagger.json", config.get('swagger.specUrl', '/swagger.json'))
-				}
-				return response.header('Content-Type', contentType).send(data)
-			})
-			.middleware(config.get('swagger.middleware', []) as string[])
+			router
+				.get(
+					`/${config.get('swagger.uiUrl', 'docs')}/:fileName?`,
+					async ({ params, response }: HttpContextContract) => {
+						const swaggerUiAssetPath = require('swagger-ui-dist').getAbsoluteFSPath()
+						if (!params.fileName) {
+							return response.redirect('/docs/index.html')
+						}
+						let fileName = params.fileName ? params.fileName : 'index.html'
+						const path = join(swaggerUiAssetPath, fileName)
+						const contentType = mime.lookup(path)
+						let data = await promises.readFile(path, 'utf-8')
+						if (fileName.includes('index.html')) {
+							//replace default host from index.html
+							data = data.replace(
+								'https://petstore.swagger.io/v2/swagger.json',
+								config.get('swagger.specUrl', '/swagger.json')
+							)
+						}
+						return response.header('Content-Type', contentType).send(data)
+					}
+				)
+				.middleware(config.get('swagger.middleware', []) as string[])
 		}
 
 		if (config.get('swagger.specEnabled', true)) {
-			router.get(config.get('swagger.specUrl'), () => {
-				return swaggerJSDoc(config.get('swagger.options', {}))
-			})
-			.middleware(config.get('swagger.middleware', []) as string[])
+			router
+				.get(config.get('swagger.specUrl'), () => {
+					return swaggerJSDoc(config.get('swagger.options', {}))
+				})
+				.middleware(config.get('swagger.middleware', []) as string[])
 		}
 	}
 }
