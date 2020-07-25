@@ -41,6 +41,8 @@
     "url": "https://github.com/reg2005/adonis5-swagger/issues"
   },
   "homepage": "https://github.com/reg2005/adonis5-swagger#readme",
+  "types": "build/adonis-typings/index.d.ts",
+  "typings": "build/adonis-typings/index.d.ts",
   "devDependencies": {
     "@adonisjs/ace": "^6.9.3",
     "@adonisjs/core": "^5.0.0-preview-rc-1.9",
@@ -123,6 +125,7 @@
     "anyBranch": false
   },
   "dependencies": {
-    "swagger-jsdoc": "^4.0.0"
+    "swagger-jsdoc": "^4.0.0",
+    "swagger-ui-dist": "^3.30.2"
   }
 }
