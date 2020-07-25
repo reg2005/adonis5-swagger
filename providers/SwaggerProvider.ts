@@ -28,7 +28,7 @@ export default class SwaggerProvider {
 			const contentType = mime.lookup(path);
 			let data = await promises.readFile(path, 'utf-8')
 			if(fileName.includes('index.html')){
-				//replace default host from indeh.html
+				//replace default host from index.html
 				data = data.replace("https://petstore.swagger.io/v2", '')
 			}
 			return response.header('Content-Type', contentType).send(data)

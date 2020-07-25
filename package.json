@@ -99,9 +99,6 @@
   ],
   "adonisjs": {
     "types": "adonis5-swagger",
-    "commands": [
-      "adonis5-swagger/build/commands"
-    ],
     "providers": [
       "adonis5-swagger"
     ],
