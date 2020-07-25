@@ -1,6 +1,6 @@
 
 # adonis5-swagger
-> Swagger, Adonis5, SwaggerUI
+> Swagger, AdonisJS, SwaggerUI
 
 [![typescript-image]][typescript-url] [![npm-image]][npm-url] [![license-image]][license-url]
 
