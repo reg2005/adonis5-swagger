@@ -65,7 +65,8 @@
     "prettier": "^2.0.5",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.7",
-    "@poppinss/dev-utils": "^1.0.7"
+    "@poppinss/dev-utils": "^1.0.7",
+    "ts-mockito": "^2.6.1"
   },
   "husky": {
     "hooks": {
