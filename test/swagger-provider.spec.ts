@@ -27,7 +27,7 @@ test.group('Swagger provider', (topGroup) => {
 
 		group.before(() => {
 			configMock = mock(Config)
-			when(configMock.get('swagger.enabled')).thenReturn(true)
+			when(configMock.get('swagger.specEnabled')).thenReturn(true)
 			when(configMock.get('swagger.specUrl')).thenReturn(testUrl)
 			when(configMock.get('swagger.options', {})).thenReturn({})
 
@@ -46,7 +46,7 @@ test.group('Swagger provider', (topGroup) => {
 			swaggerProvider.register()
 			swaggerProvider.boot()
 
-			verify(configMock.get('swagger.enabled')).once()
+			verify(configMock.get('swagger.specEnabled')).once()
 			verify(configMock.get('swagger.specUrl')).once()
 
 			verify(routerMock.get(testUrl, anything())).once()
@@ -61,7 +61,7 @@ test.group('Swagger provider', (topGroup) => {
 
 		group.before(() => {
 			configMock = mock(Config)
-			when(configMock.get('swagger.enabled')).thenReturn(false)
+			when(configMock.get('swagger.specEnabled')).thenReturn(false)
 
 			routerMock = mock(Router)
 			when(routerMock.get(testUrl, anything())).thenReturn({} as any)
@@ -78,7 +78,7 @@ test.group('Swagger provider', (topGroup) => {
 			swaggerProvider.register()
 			swaggerProvider.boot()
 
-			verify(configMock.get('swagger.enabled')).once()
+			verify(configMock.get('swagger.specEnabled')).once()
 			verify(configMock.get('swagger.specUrl')).never()
 
 			verify(routerMock.get(testUrl, anything())).never()

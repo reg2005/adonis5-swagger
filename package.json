@@ -122,6 +122,7 @@
     "anyBranch": false
   },
   "dependencies": {
+    "mime": "^2.4.6",
     "swagger-jsdoc": "^4.0.0",
     "swagger-ui-dist": "^3.30.2"
   }
