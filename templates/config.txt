@@ -1,0 +1,22 @@
+import { SwaggerConfig } from '@ioc:Adonis/Addons/Swagger'
+
+export default {
+	enabled: true,
+	specUrl: '/swagger.json',
+
+	options: {
+		definition: {
+			openapi: '3.0.0',
+			info: {
+				title: 'Application with swagger docs',
+				version: '1.0.0'
+			}
+		},
+
+		apis: [
+			'app/**/*.ts',
+			'start/routes.ts'
+		],
+		basePath: '/'
+	}
+} as SwaggerConfig

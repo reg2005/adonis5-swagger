@@ -22,6 +22,5 @@ export default class SwaggerRemove extends BaseCommand {
 	/**
 	 * Execute command
 	 */
-	public async handle(): Promise<void> {
-	}
+	public async handle(): Promise<void> {}
 }
