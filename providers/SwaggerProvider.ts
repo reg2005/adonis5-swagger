@@ -36,7 +36,7 @@ export default class SwaggerProvider {
 							//replace default host from index.html
 							data = data.replace(
 								'https://petstore.swagger.io/v2/swagger.json',
-								config.get('swagger.specUrl', '/swagger.json')
+								config.get('swagger.specUrl')
 							)
 						}
 						return response.header('Content-Type', contentType).send(data)

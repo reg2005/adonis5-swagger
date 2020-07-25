@@ -4,6 +4,7 @@
 		"skipLibCheck": true,
 		"experimentalDecorators": true,
 		"emitDecoratorMetadata": true,
+		"resolveJsonModule": true
 	},
 	"extends": "./node_modules/@adonisjs/mrm-preset/_tsconfig",
 	"files": ["./node_modules/@adonisjs/core/build/adonis-typings/index.d.ts"]

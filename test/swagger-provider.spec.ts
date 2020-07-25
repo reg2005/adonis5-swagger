@@ -1,10 +1,11 @@
 import test from 'japa'
 import { join } from 'path'
 import ProviderInstantiator from './utils/provider-instantiator'
-import { RouterContract } from '@ioc:Adonis/Core/Route'
+import { RouterContract, RouteContract } from '@ioc:Adonis/Core/Route'
 import { ConfigContract } from '@ioc:Adonis/Core/Config'
 import { Config } from '@adonisjs/config/build/standalone'
 import { Router } from '@adonisjs/http-server/build/standalone'
+import { Route } from '@adonisjs/http-server/build/src/Router/Route'
 import { mock, when, instance, verify, anything } from 'ts-mockito'
 import SwaggerProvider from '../providers/SwaggerProvider'
 import { Filesystem } from '@poppinss/dev-utils'
@@ -23,16 +24,23 @@ test.group('Swagger provider', (topGroup) => {
 		let testUrl = 'testUrl'
 		let configMock: ConfigContract
 		let routerMock: RouterContract
+		let routerForMiddlewareMock: RouteContract
 		let providerInstantiator: ProviderInstantiator
 
 		group.before(() => {
 			configMock = mock(Config)
-			when(configMock.get('swagger.specEnabled')).thenReturn(true)
+			when(configMock.get('swagger.uiEnabled', true)).thenReturn(true)
+			when(configMock.get('swagger.specEnabled', true)).thenReturn(true)
+			when(configMock.get('swagger.uiUrl', 'docs')).thenReturn('docs')
 			when(configMock.get('swagger.specUrl')).thenReturn(testUrl)
+			when(configMock.get('swagger.middleware', [])).thenReturn([])
 			when(configMock.get('swagger.options', {})).thenReturn({})
 
 			routerMock = mock(Router)
-			when(routerMock.get(testUrl, anything())).thenReturn({} as any)
+			routerForMiddlewareMock = mock(Route)
+			const routeForMiddlewareInstance = instance(routerForMiddlewareMock)
+			when(routerMock.get(`/docs/:fileName?`, anything())).thenReturn(routeForMiddlewareInstance)
+			when(routerMock.get(testUrl, anything())).thenReturn(routeForMiddlewareInstance)
 
 			providerInstantiator = new ProviderInstantiator(fs)
 			providerInstantiator.bindServices({
@@ -46,10 +54,13 @@ test.group('Swagger provider', (topGroup) => {
 			swaggerProvider.register()
 			swaggerProvider.boot()
 
-			verify(configMock.get('swagger.specEnabled')).once()
+			verify(configMock.get('swagger.uiEnabled', true)).once()
+			verify(configMock.get('swagger.specEnabled', true)).once()
+			verify(configMock.get('swagger.uiUrl', 'docs')).once()
 			verify(configMock.get('swagger.specUrl')).once()
 
 			verify(routerMock.get(testUrl, anything())).once()
+			verify(routerForMiddlewareMock.middleware(anything())).twice()
 		})
 	})
 
@@ -61,6 +72,7 @@ test.group('Swagger provider', (topGroup) => {
 
 		group.before(() => {
 			configMock = mock(Config)
+			when(configMock.get('swagger.uiEnabled')).thenReturn(false)
 			when(configMock.get('swagger.specEnabled')).thenReturn(false)
 
 			routerMock = mock(Router)
@@ -78,7 +90,9 @@ test.group('Swagger provider', (topGroup) => {
 			swaggerProvider.register()
 			swaggerProvider.boot()
 
-			verify(configMock.get('swagger.specEnabled')).once()
+			verify(configMock.get('swagger.specEnabled')).never()
+			verify(configMock.get('swagger.uiEnabled')).never()
+			verify(configMock.get('swagger.uiUrl', 'docs')).never()
 			verify(configMock.get('swagger.specUrl')).never()
 
 			verify(routerMock.get(testUrl, anything())).never()

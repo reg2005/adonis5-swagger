@@ -6,9 +6,11 @@ import { Ignitor } from '@adonisjs/core/build/src/Ignitor'
 import { setupApplicationFiles } from '../test-helpers'
 import { createServer } from 'http'
 import { promises as fs } from 'fs'
+import swaggerResponse from './fixtures/swagger.json'
 
 let vfs = new Filesystem(join(__dirname, '__app'))
-test.group('Swagger provider', () => {
+
+test.group('Swagger e2e test', () => {
 	test.group('Swagger enabled', async () => {
 		test('should instantiate provider with enabled swagger', async (assert) => {
 			await vfs.add(
@@ -33,7 +35,7 @@ test.group('Swagger provider', () => {
 			assert.isTrue(httpServer.application.isReady)
 
 			const { text } = await supertest(server.instance).get('/swagger.json').expect(200)
-			console.log(text)
+			assert.equal(text, JSON.stringify(swaggerResponse))
 			server.instance.close()
 		})
 	})
