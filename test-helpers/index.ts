@@ -6,8 +6,8 @@ export async function setupApplicationFiles(fs: Filesystem, additionalProviders?
 	await fs.fsExtra.ensureDir(join(fs.basePath, 'config'))
 
 	const providers = Array.isArray(additionalProviders)
-		? additionalProviders.concat(join(__dirname, '../providers/TestAppProvider.ts'))
-		: [join(__dirname, '../providers/TestAppProvider.ts')]
+		? additionalProviders.concat(join(__dirname, './providers/TestAppProvider.ts'))
+		: [join(__dirname, './providers/TestAppProvider.ts')]
 
 	await fs.add(
 		'.adonisrc.json',
