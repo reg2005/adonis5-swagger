@@ -7,36 +7,73 @@ import { setupApplicationFiles } from '../test-helpers'
 import { createServer } from 'http'
 import { promises as fs } from 'fs'
 import swaggerResponse from './fixtures/swagger.json'
+import swaggerConfig from './fixtures/swagger-config.json'
 
-let vfs = new Filesystem(join(__dirname, '__app'))
+async function initServerWithSwaggerConfig(vfs: Filesystem, config) {
+	await vfs.add(
+		'providers/SwaggerProvider.ts',
+		await fs.readFile(join(__dirname, '/../providers/SwaggerProvider.ts'), 'utf-8')
+	)
+	await vfs.add('config/swagger.json', JSON.stringify(config))
+	await setupApplicationFiles(vfs, ['./providers/SwaggerProvider.ts'])
+	const ignitor = new Ignitor(vfs.basePath)
+	const bootstrapper = ignitor.boostrapper()
+	const httpServer = ignitor.httpServer()
+	const application = bootstrapper.setup()
 
-test.group('Swagger e2e test', () => {
-	test.group('Swagger enabled', async () => {
-		test('should instantiate provider with enabled swagger', async (assert) => {
-			await vfs.add(
-				'providers/SwaggerProvider.ts',
-				await fs.readFile(join(__dirname, '/../providers/SwaggerProvider.ts'), 'utf-8')
-			)
-			await setupApplicationFiles(vfs, ['./providers/SwaggerProvider.ts'])
-			const ignitor = new Ignitor(vfs.basePath)
-			const boostrapper = ignitor.boostrapper()
-			const httpServer = ignitor.httpServer()
-			const application = boostrapper.setup()
+	bootstrapper.registerAliases()
+	bootstrapper.registerProviders(false)
+	await bootstrapper.bootProviders()
 
-			boostrapper.registerAliases()
-			boostrapper.registerProviders(false)
-			await boostrapper.bootProviders()
+	const app = application.container.use('Adonis/Core/Server')
+	application.container.use('Adonis/Core/Route').get('/', () => 'handled')
+	httpServer.injectBootstrapper(bootstrapper)
 
-			const server = application.container.use('Adonis/Core/Server')
-			application.container.use('Adonis/Core/Route').get('/', () => 'handled')
-			httpServer.injectBootstrapper(boostrapper)
+	await httpServer.start((handler) => createServer(handler))
 
-			await httpServer.start((handler) => createServer(handler))
-			assert.isTrue(httpServer.application.isReady)
+	return { app, httpServer }
+}
 
-			const { text } = await supertest(server.instance).get('/swagger.json').expect(200)
-			assert.equal(text, JSON.stringify(swaggerResponse))
-			server.instance.close()
-		})
+test.group('Swagger e2e test - swagger enabled', (group) => {
+	let vfs
+
+	group.beforeEach(async () => {
+		vfs = new Filesystem(join(__dirname, '__app'))
 	})
+
+	group.afterEach(async () => {
+		await vfs.cleanup()
+	})
+
+	test('Swagger enabled, should return swagger JSON from mounted endpoint', async (assert) => {
+		const { app } = await initServerWithSwaggerConfig(vfs, swaggerConfig)
+		const { text } = await supertest(app.instance).get(swaggerConfig.specUrl).expect(200)
+		assert.equal(text, JSON.stringify(swaggerResponse))
+		await app.instance.close()
+	}).timeout(0)
+
+	test('Swagger enabled, should return swagger ui', async () => {
+		const { app } = await initServerWithSwaggerConfig(vfs, swaggerConfig)
+		await supertest(app.instance)
+			.get(swaggerConfig.uiUrl + '/index.html')
+			.expect(200)
+			.expect('Content-Type', /html/)
+
+		await app.instance.close()
+	}).timeout(0)
+
+	test('Swagger ui disabled, should return 404 response', async () => {
+		const { app } = await initServerWithSwaggerConfig(vfs, { ...swaggerConfig, uiEnabled: false })
+		await supertest(app.instance)
+			.get(swaggerConfig.uiUrl + '/index.html')
+			.expect(404)
+
+		await app.instance.close()
+	}).timeout(0)
+
+	test('Swagger disabled, should return 404, route is not mounted', async () => {
+		const { app } = await initServerWithSwaggerConfig(vfs, { specEnabled: false })
+		await supertest(app.instance).get('/swagger.json').expect(404)
+		await app.instance.close()
+	}).timeout(0)
 })

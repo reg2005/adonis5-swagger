@@ -33,6 +33,7 @@ export default class TestAppProvider {
 		'@adonisjs/http-server',
 		'@adonisjs/bodyparser',
 		'@adonisjs/validator',
+		'@adonisjs/core',
 	]
 
 	/**

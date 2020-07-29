@@ -6,7 +6,7 @@
     "mrm": "mrm --preset=@adonisjs/mrm-preset",
     "pretest": "npm run lint",
     "dev": "tsc --watch",
-    "test": "node japaFile.ts",
+    "test": "node japaFile.js",
     "clean": "del build",
     "compile": "npm run lint && npm run clean && tsc && npm run copy:files",
     "copy:files": "cpx 'templates/**' 'build/templates'",
@@ -47,6 +47,7 @@
     "@adonisjs/ace": "^6.9.3",
     "@adonisjs/core": "^5.0.0-preview-rc-1.9",
     "@adonisjs/fold": "^6.3.5",
+    "@adonisjs/ioc-transformer": "^1.0.2",
     "@adonisjs/logger": "^2.0.7",
     "@adonisjs/mrm-preset": "^2.4.0",
     "@poppinss/dev-utils": "^1.0.7",
@@ -75,7 +76,8 @@
     "supertest": "^4.0.2",
     "ts-mockito": "^2.6.1",
     "ts-node": "^8.10.2",
-    "typescript": "^3.9.7"
+    "typescript": "^3.9.7",
+    "yargs": "^15.4.1"
   },
   "husky": {
     "hooks": {

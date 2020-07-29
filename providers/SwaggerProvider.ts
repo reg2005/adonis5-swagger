@@ -6,6 +6,7 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { promises } from 'fs'
 import { join } from 'path'
 import mime from 'mime'
+
 export default class SwaggerProvider {
 	constructor(protected container: IocContract) {}
 
@@ -22,7 +23,7 @@ export default class SwaggerProvider {
 		if (config.get('swagger.uiEnabled', true)) {
 			router
 				.get(
-					`/${config.get('swagger.uiUrl', 'docs')}/:fileName?`,
+					`${config.get('swagger.uiUrl', 'docs')}/:fileName?`,
 					async ({ params, response }: HttpContextContract) => {
 						const swaggerUiAssetPath = require('swagger-ui-dist').getAbsoluteFSPath()
 						if (!params.fileName) {
@@ -30,7 +31,7 @@ export default class SwaggerProvider {
 						}
 						let fileName = params.fileName ? params.fileName : 'index.html'
 						const path = join(swaggerUiAssetPath, fileName)
-						const contentType = mime.lookup(path)
+						const contentType = mime.getType(path)
 						let data = await promises.readFile(path, 'utf-8')
 						if (fileName.includes('index.html')) {
 							//replace default host from index.html
