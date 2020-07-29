@@ -45,6 +45,7 @@ export default class SwaggerProvider {
 				.middleware(config.get('swagger.middleware', []) as string[])
 		}
 
+		console.log(config.get('swagger.specEnabled'))
 		if (config.get('swagger.specEnabled', true)) {
 			router
 				.get(config.get('swagger.specUrl'), () => {
