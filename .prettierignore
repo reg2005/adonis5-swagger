@@ -4,4 +4,5 @@ docs
 config.json
 .eslintrc.json
 package.json
+package-lock.json
 *.html

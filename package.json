@@ -1,21 +1,23 @@
 {
   "name": "adonis5-swagger",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Swagger provider for AdonisJS 5",
   "scripts": {
     "mrm": "mrm --preset=@adonisjs/mrm-preset",
     "pretest": "npm run lint",
     "dev": "tsc --watch",
-    "test": "node japaFile.ts",
+    "test": "node japaFile.js",
     "clean": "del build",
-    "compile": "npm run lint && npm run clean && tsc",
+    "compile": "npm run lint && npm run clean && tsc && npm run copy:files",
+    "copy:files": "cpx 'templates/**' 'build/templates'",
     "build": "npm run compile",
     "prepublishOnly": "npm run build",
-    "lint": "eslint . --ext=.ts",
+    "lint": "eslint . --ext=.ts --fix",
     "format": "prettier --write .",
     "commit": "git-cz",
     "release": "np",
     "version": "npm run build",
+    "run-prettier": "prettier --write .",
     "sync-labels": "github-label-sync --labels ./node_modules/@adonisjs/mrm-preset/gh-labels.json reg2005/adonis5-swagger"
   },
   "repository": {
@@ -30,9 +32,8 @@
   "author": "Evgeniy Ryumin",
   "contributors": [
     {
-      "name": "",
-      "email": "example@example.com",
-      "url": "https://example.com"
+      "name": "Vladyslav Parashchenko",
+      "email": "vladyslavparashchenko37@gmail.com"
     }
   ],
   "license": "MIT",
@@ -40,14 +41,19 @@
     "url": "https://github.com/reg2005/adonis5-swagger/issues"
   },
   "homepage": "https://github.com/reg2005/adonis5-swagger#readme",
+  "types": "build/adonis-typings/index.d.ts",
+  "typings": "build/adonis-typings/index.d.ts",
   "devDependencies": {
     "@adonisjs/ace": "^6.9.3",
     "@adonisjs/core": "^5.0.0-preview-rc-1.9",
     "@adonisjs/fold": "^6.3.5",
+    "@adonisjs/ioc-transformer": "^1.0.2",
     "@adonisjs/logger": "^2.0.7",
     "@adonisjs/mrm-preset": "^2.4.0",
+    "@poppinss/dev-utils": "^1.0.7",
     "@types/node": "^14.0.24",
     "commitizen": "^4.1.2",
+    "cpx": "^1.5.0",
     "cz-conventional-changelog": "^3.2.0",
     "debug": "^4.1.1",
     "del-cli": "^3.0.1",
@@ -56,16 +62,22 @@
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-adonis": "^1.0.14",
     "eslint-plugin-prettier": "^3.1.4",
+    "get-port": "^5.1.1",
     "github-label-sync": "^2.0.0",
     "husky": "^4.2.5",
     "japa": "^3.1.1",
     "mrm": "^2.3.3",
     "np": "^6.3.2",
     "npm-audit-html": "^1.4.1",
+    "pino-pretty": "^4.1.0",
     "prettier": "^2.0.5",
+    "reflect-metadata": "^0.1.13",
+    "source-map-support": "^0.5.19",
+    "supertest": "^4.0.2",
+    "ts-mockito": "^2.6.1",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.7",
-    "@poppinss/dev-utils": "^1.0.7"
+    "yargs": "^15.4.1"
   },
   "husky": {
     "hooks": {
@@ -89,12 +101,18 @@
   ],
   "adonisjs": {
     "types": "adonis5-swagger",
-    "commands": [
-      "adonis5-swagger/build/commands"
-    ],
     "providers": [
       "adonis5-swagger"
-    ]
+    ],
+    "templates": {
+      "basePath": "./build/templates",
+      "config": [
+        {
+          "src": "config.txt",
+          "dest": "swagger"
+        }
+      ]
+    }
   },
   "config": {
     "commitizen": {
@@ -106,6 +124,8 @@
     "anyBranch": false
   },
   "dependencies": {
-    "swagger-jsdoc": "^4.0.0"
+    "mime": "^2.4.6",
+    "swagger-jsdoc": "^4.0.0",
+    "swagger-ui-dist": "^3.30.2"
   }
 }
