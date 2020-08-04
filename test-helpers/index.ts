@@ -31,9 +31,9 @@ export default class ExceptionHandler extends HttpExceptionHandler {
     super(Logger)
   }
 
-  handler(error, ctx) {
-		console.log(error)
-  	super.handle(error, ctx)
+  public handler(error, ctx) {
+    console.log(error)
+    super.handle(error, ctx)
   }
 }`
 	)
