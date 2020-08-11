@@ -1,6 +1,6 @@
 {
   "name": "adonis5-swagger",
-  "version": "1.0.1",
+  "version": "1.0.5",
   "description": "Swagger provider for AdonisJS 5",
   "scripts": {
     "mrm": "mrm --preset=@adonisjs/mrm-preset",
@@ -95,9 +95,12 @@
   },
   "main": "build/index.js",
   "files": [
+    "build/adonis-typings",
     "build/src",
     "build/index.d.ts",
-    "build/index.js"
+    "build/index.js",
+    "build/templates",
+    "build/providers"
   ],
   "adonisjs": {
     "types": "adonis5-swagger",
