@@ -5,17 +5,13 @@ import { Filesystem } from '@poppinss/dev-utils'
 import { Ignitor } from '@adonisjs/core/build/src/Ignitor'
 import { setupApplicationFiles } from '../test-helpers'
 import { createServer } from 'http'
-import { promises as fs } from 'fs'
 import swaggerResponse from './fixtures/swagger.json'
 import swaggerConfig from './fixtures/swagger-config.json'
+import SwaggerProvider from '../providers/SwaggerProvider'
 
 async function initServerWithSwaggerConfig(vfs: Filesystem, config) {
-	await vfs.add(
-		'providers/SwaggerProvider.ts',
-		await fs.readFile(join(__dirname, '/../providers/SwaggerProvider.ts'), 'utf-8')
-	)
 	await vfs.add('config/swagger.json', JSON.stringify(config))
-	await setupApplicationFiles(vfs, ['./providers/SwaggerProvider.ts'])
+	await setupApplicationFiles(vfs, [])
 	const ignitor = new Ignitor(vfs.basePath)
 	const bootstrapper = ignitor.boostrapper()
 	const httpServer = ignitor.httpServer()
@@ -24,6 +20,10 @@ async function initServerWithSwaggerConfig(vfs: Filesystem, config) {
 	bootstrapper.registerAliases()
 	bootstrapper.registerProviders(false)
 	await bootstrapper.bootProviders()
+
+	const provider = new SwaggerProvider(application.container)
+	await provider.register()
+	await provider.boot()
 
 	const app = application.container.use('Adonis/Core/Server')
 	application.container.use('Adonis/Core/Route').get('/', () => 'handled')

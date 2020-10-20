@@ -13,7 +13,7 @@
 				"description": "My application with swagger docs"
 			}
 		},
-		"apis": ["./../app/**/*.ts", "./../docs/swagger/**/*.yml", "./../start/routes.ts"],
+		"apis": ["app/**/*.ts", "docs/swagger/**/*.yml", "start/routes.ts"],
 		"basePath": "/"
 	}
 }

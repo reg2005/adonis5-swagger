@@ -6,6 +6,7 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { promises } from 'fs'
 import { join } from 'path'
 import mime from 'mime'
+import buildJsDocConfig from '../src/Utils/buildJsDocConfig'
 
 export default class SwaggerProvider {
 	constructor(protected container: IocContract) {}
@@ -49,7 +50,7 @@ export default class SwaggerProvider {
 		if (config.get('swagger.specEnabled', true)) {
 			router
 				.get(config.get('swagger.specUrl'), () => {
-					return swaggerJSDoc(config.get('swagger.options', {}))
+					return swaggerJSDoc(buildJsDocConfig(config.get('swagger.options', {})))
 				})
 				.middleware(config.get('swagger.middleware', []) as string[])
 		}
