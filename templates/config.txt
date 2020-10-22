@@ -19,9 +19,9 @@ export default {
 		},
 
 		apis: [
-			'./../app/**/*.ts',
-			'./../docs/swagger/**/*.yml',
-			'./../start/routes.ts'
+			'app/**/*.ts',
+			'docs/swagger/**/*.yml',
+			'start/routes.ts'
 		],
 		basePath: '/'
 	}
