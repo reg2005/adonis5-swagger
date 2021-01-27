@@ -1,0 +1,14 @@
+{
+	"typescript": true,
+	"commands": [],
+	"exceptionHandlerNamespace": "App/Exceptions/Handler",
+	"aliases": {
+		"App": "app",
+		"Config": "config",
+		"Database": "database",
+		"Contracts": "contracts"
+	},
+	"preloads": [],
+	"providers": [],
+	"aceProviders": []
+}

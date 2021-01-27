@@ -13,7 +13,7 @@ export default class SwaggerProvider {
 
 	public register(): void {}
 
-	public boot(): void {
+	public async boot(): Promise<void> {
 		this.initSwaggerRoutes()
 	}
 
