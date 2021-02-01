@@ -13,6 +13,7 @@ Create API documentation easily in Adonis 5 using [Swagger](https://swagger.io/s
 - [Installation](#installation)
 - [Sample Usage](#sample-usage)
 - [Best usage](#best-usage)
+- [Custom UI](#custom-ui)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -138,6 +139,62 @@ node ace invoke adonis5-swagger
 
 Open http://localhost:3333/docs in your browser
 For detail usage, please check the Swagger specification in this [SwaggerSpec](https://swagger.io/specification/)
+
+# Custom UI
+For using custom ui you should use own build of swagger ui. Current package contains only preconfigured and already built ui bundle. For example, you can use [Adonis Edge](https://preview.adonisjs.com/packages/edge) for rendering ui with custom params.
+
+First, install edge:
+```bash
+npm i @adonisjs/view
+```
+Once installed, run the following ace command to setup the package.
+```bash
+node ace invoke @adonisjs/view
+```
+Generate new template file using Adonis generator:
+```bash
+node ace make:view swagger
+```
+
+And then add route for custom UI:
+```js
+Route.get('/', async ({ view }) => {
+	const specUrl = 'your spec url'
+	return view.render('swagger', { specUrl })
+})
+```
+
+Your template should have similar content:
+```html
+<!DOCTYPE html>
+<head>
+	<script src="//unpkg.com/swagger-ui-dist@3/swagger-ui-standalone-preset.js"></script>
+	<script src="//unpkg.com/swagger-ui-dist@3/swagger-ui-bundle.js"></script>
+	<link rel="stylesheet" href="//unpkg.com/swagger-ui-dist@3/swagger-ui.css"/>
+	<script>
+		window.onload = () => {
+			let ui = SwaggerUIBundle({
+				url: "{{ specUrl }}",
+				dom_id: "#swagger-ui",
+				presets: [
+					SwaggerUIBundle.presets.apis,
+					SwaggerUIBundle.SwaggerUIStandalonePreset
+				],
+				plugins: [
+					SwaggerUIBundle.plugins.DownloadUrl
+				],
+			})
+
+			window.ui = ui
+		}
+	</script>
+</head>
+<body>
+	<div id="swagger-ui"></div>
+</body>
+</html>
+```
+It is the simplest way for using custom swagger ui, but of course you could use Webpack or another bundler tool for bundling your pre configured Swagger ui.
 
 [typescript-image]: https://img.shields.io/badge/Typescript-294E80.svg?style=for-the-badge&logo=typescript
 [typescript-url]:  "typescript"
