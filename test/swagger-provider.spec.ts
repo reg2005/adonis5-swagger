@@ -1,41 +1,30 @@
 import test from 'japa'
-import { join } from 'path'
-import ProviderInstantiator from './utils/provider-instantiator'
 import { RouterContract, RouteContract } from '@ioc:Adonis/Core/Route'
 import { ConfigContract } from '@ioc:Adonis/Core/Config'
-import { Config } from '@adonisjs/config/build/standalone'
 import { Router } from '@adonisjs/http-server/build/standalone'
 import { Route } from '@adonisjs/http-server/build/src/Router/Route'
 import { mock, when, instance, verify, anything } from 'ts-mockito'
 import SwaggerProvider from '../providers/SwaggerProvider'
-import { Filesystem } from '@poppinss/dev-utils'
-import { registerHooks } from './utils/hooks-helpers'
+import { Config } from '@adonisjs/config'
+import { AdonisApplication } from '../test-helpers/TestAdonisApp'
+import { ContainerBindings } from '@ioc:Adonis/Core/Application'
 
-let fs: Filesystem
+async function createAdonisApp(mockedServices: Partial<ContainerBindings>) {
+	const app = await new AdonisApplication([], []).loadApp()
+	for (const [alias, mockedService] of Object.entries(mockedServices)) {
+		app.iocContainer.bind(alias, () => mockedService)
+	}
 
-const initFs = async () => {
-	fs = new Filesystem(join(__dirname, '__app'))
+	return app
 }
-
-const cleanFs = async () => {
-	await fs.cleanup()
-}
-
-const globalHooks = {
-	before: [initFs],
-	after: [cleanFs],
-}
-
 test.group('Swagger enabled', (group) => {
-	registerHooks(group, globalHooks)
-
 	let testUrl = 'testUrl'
 	let configMock: ConfigContract
 	let routerMock: RouterContract
 	let routerForMiddlewareMock: RouteContract
-	let providerInstantiator: ProviderInstantiator
+	let app: AdonisApplication
 
-	group.before(() => {
+	group.before(async () => {
 		configMock = mock(Config)
 		when(configMock.get('swagger.uiEnabled', true)).thenReturn(true)
 		when(configMock.get('swagger.specEnabled', true)).thenReturn(true)
@@ -50,17 +39,20 @@ test.group('Swagger enabled', (group) => {
 		when(routerMock.get(`docs/:fileName?`, anything())).thenReturn(routeForMiddlewareInstance)
 		when(routerMock.get(testUrl, anything())).thenReturn(routeForMiddlewareInstance)
 
-		providerInstantiator = new ProviderInstantiator(fs)
-		providerInstantiator.bindServices({
+		app = await createAdonisApp({
 			'Adonis/Core/Config': instance(configMock),
 			'Adonis/Core/Route': instance(routerMock),
 		})
 	})
 
-	test('should instantiate provider with enabled swagger', () => {
-		const swaggerProvider = providerInstantiator.instantiateProvider(SwaggerProvider)
+	group.after(async () => {
+		await app.stopApp()
+	})
+
+	test('should instantiate provider with enabled swagger', async () => {
+		const swaggerProvider = new SwaggerProvider(app.iocContainer)
 		swaggerProvider.register()
-		swaggerProvider.boot()
+		await swaggerProvider.boot()
 
 		verify(configMock.get('swagger.uiEnabled', true)).once()
 		verify(configMock.get('swagger.specEnabled', true)).once()
@@ -73,14 +65,12 @@ test.group('Swagger enabled', (group) => {
 })
 
 test.group('Swagger disabled', (group) => {
-	registerHooks(group, globalHooks)
-
 	let testUrl = 'testUrl'
 	let configMock: ConfigContract
 	let routerMock: RouterContract
-	let providerInstantiator: ProviderInstantiator
+	let app: AdonisApplication
 
-	group.before(() => {
+	group.before(async () => {
 		configMock = mock(Config)
 		when(configMock.get('swagger.uiEnabled')).thenReturn(false)
 		when(configMock.get('swagger.specEnabled')).thenReturn(false)
@@ -88,17 +78,20 @@ test.group('Swagger disabled', (group) => {
 		routerMock = mock(Router)
 		when(routerMock.get(testUrl, anything())).thenReturn({} as any)
 
-		providerInstantiator = new ProviderInstantiator(this.fs)
-		providerInstantiator.bindServices({
+		app = await createAdonisApp({
 			'Adonis/Core/Config': instance(configMock),
 			'Adonis/Core/Route': instance(routerMock),
 		})
 	})
 
-	test('should not init swagger module, swagger was disabled', () => {
-		const swaggerProvider = providerInstantiator.instantiateProvider(SwaggerProvider)
+	group.after(async () => {
+		await app.stopApp()
+	})
+
+	test('should not init swagger module, swagger was disabled', async () => {
+		const swaggerProvider = new SwaggerProvider(app.iocContainer)
 		swaggerProvider.register()
-		swaggerProvider.boot()
+		await swaggerProvider.boot()
 
 		verify(configMock.get('swagger.specEnabled')).never()
 		verify(configMock.get('swagger.uiEnabled')).never()

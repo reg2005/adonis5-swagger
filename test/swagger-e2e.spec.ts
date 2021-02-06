@@ -1,79 +1,58 @@
 import test from 'japa'
 import supertest from 'supertest'
-import { join } from 'path'
-import { Filesystem } from '@poppinss/dev-utils'
-import { Ignitor } from '@adonisjs/core/build/src/Ignitor'
-import { setupApplicationFiles } from '../test-helpers'
-import { createServer } from 'http'
 import swaggerResponse from './fixtures/swagger.json'
 import swaggerConfig from './fixtures/swagger-config.json'
 import SwaggerProvider from '../providers/SwaggerProvider'
+import { AdonisApplication } from '../test-helpers/TestAdonisApp'
+import { SwaggerConfig } from '@ioc:Adonis/Addons/Swagger'
 
-async function initServerWithSwaggerConfig(vfs: Filesystem, config) {
-	await vfs.add('config/swagger.json', JSON.stringify(config))
-	await setupApplicationFiles(vfs, [])
-	const ignitor = new Ignitor(vfs.basePath)
-	const bootstrapper = ignitor.boostrapper()
-	const httpServer = ignitor.httpServer()
-	const application = bootstrapper.setup()
-
-	bootstrapper.registerAliases()
-	bootstrapper.registerProviders(false)
-	await bootstrapper.bootProviders()
-
-	const provider = new SwaggerProvider(application.container)
-	await provider.register()
-	await provider.boot()
-
-	const app = application.container.use('Adonis/Core/Server')
-	application.container.use('Adonis/Core/Route').get('/', () => 'handled')
-	httpServer.injectBootstrapper(bootstrapper)
-
-	await httpServer.start((handler) => createServer(handler))
-
-	return { app, httpServer }
+async function initServerWithSwaggerConfig(config: SwaggerConfig): Promise<AdonisApplication> {
+	return new AdonisApplication([], [])
+		.registerProvider(SwaggerProvider)
+		.registerAppConfig({ configName: 'swagger', appConfig: config })
+		.loadAppWithHttpServer()
 }
 
-test.group('Swagger e2e test - swagger enabled', (group) => {
-	let vfs
-
-	group.beforeEach(async () => {
-		vfs = new Filesystem(join(__dirname, '__app'))
-	})
-
-	group.afterEach(async () => {
-		await vfs.cleanup()
-	})
-
+test.group('Swagger e2e test - swagger enabled', () => {
 	test('Swagger enabled, should return swagger JSON from mounted endpoint', async (assert) => {
-		const { app } = await initServerWithSwaggerConfig(vfs, swaggerConfig)
-		const { text } = await supertest(app.instance).get(swaggerConfig.specUrl).expect(200)
+		const app = await initServerWithSwaggerConfig(swaggerConfig)
+		const httpServer = app.iocContainer.use('Adonis/Core/Server')
+
+		const { text } = await supertest(httpServer.instance).get(swaggerConfig.specUrl).expect(200)
 		assert.equal(text, JSON.stringify(swaggerResponse))
-		await app.instance.close()
+
+		await app.stopServer()
 	}).timeout(0)
 
 	test('Swagger enabled, should return swagger ui', async () => {
-		const { app } = await initServerWithSwaggerConfig(vfs, swaggerConfig)
-		await supertest(app.instance)
+		const app = await initServerWithSwaggerConfig(swaggerConfig)
+		const httpServer = app.iocContainer.use('Adonis/Core/Server')
+
+		await supertest(httpServer.instance)
 			.get(swaggerConfig.uiUrl + '/index.html')
 			.expect(200)
 			.expect('Content-Type', /html/)
 
-		await app.instance.close()
-	}).timeout(0)
-
-	test('Swagger ui disabled, should return 404 response', async () => {
-		const { app } = await initServerWithSwaggerConfig(vfs, { ...swaggerConfig, uiEnabled: false })
-		await supertest(app.instance)
-			.get(swaggerConfig.uiUrl + '/index.html')
-			.expect(404)
-
-		await app.instance.close()
+		await app.stopServer()
 	}).timeout(0)
 
 	test('Swagger disabled, should return 404, route is not mounted', async () => {
-		const { app } = await initServerWithSwaggerConfig(vfs, { specEnabled: false })
-		await supertest(app.instance).get('/swagger.json').expect(404)
-		await app.instance.close()
+		const app = await initServerWithSwaggerConfig({ ...swaggerConfig, specEnabled: false })
+		const httpServer = app.iocContainer.use('Adonis/Core/Server')
+
+		await supertest(httpServer.instance).get('/swagger.json').expect(404)
+
+		await app.stopServer()
+	}).timeout(0)
+
+	test('Swagger ui disabled, should return 404 response', async () => {
+		const app = await initServerWithSwaggerConfig({ ...swaggerConfig, uiEnabled: false })
+		const httpServer = app.iocContainer.use('Adonis/Core/Server')
+
+		await supertest(httpServer.instance)
+			.get(swaggerConfig.uiUrl + '/index.html')
+			.expect(404)
+
+		await app.stopServer()
 	}).timeout(0)
 })
