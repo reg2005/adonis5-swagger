@@ -14,6 +14,9 @@ Create API documentation easily in Adonis 5 using [Swagger](https://swagger.io/s
 - [Sample Usage](#sample-usage)
 - [Best usage](#best-usage)
 - [Custom UI](#custom-ui)
+- [Build swagger spec file](#build-swagger-spec-file)
+- [Swagger modes](#swagger-modes)
+- [Production using](#production-using)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -195,6 +198,49 @@ Your template should have similar content:
 </html>
 ```
 It is the simplest way for using custom swagger ui, but of course you could use Webpack or another bundler tool for bundling your pre configured Swagger ui.
+# Build swagger spec file
+
+You can build swagger spec file the next way:
+
+Set `specFilePath` option to your swagger config:
+```js
+const swaggerConfig = {
+	specFilePath: 'docs/swagger.json'
+}
+```
+And then run adonis command:
+```bash
+node ace swagger:generate
+```
+Generated file will be written to by path configured in config.
+
+# Swagger modes
+This package support two modes:
+- PRODUCTION
+- RUNTIME
+
+By default RUNTIME mode enabled. When RUNTIME mode enabled package rebuild swagger spec file on each request. When you use PRODUCTION you should build your swagger spec once and then package will be respond this file content on each request.
+
+# Production using
+For using swagger in production you should make some preparations:
+-	Setup swagger config:
+```js
+const swaggerConfig = { 
+	mode: process.env.NODE_ENV === 'production' ? 'PRODUCTION' : 'RUNTIME',
+	specFilePath: 'docs/swagger.json'
+}
+```
+- Add post hook for npm build script to your `package.json`:
+```json
+{
+	"scripts": {
+		"build": "npm run compile",
+		"postbuild": "node ace swagger:generate && cp -a docs/ build/docs"
+	}
+}
+```
+- Deliver your source code to production server.
+
 
 [typescript-image]: https://img.shields.io/badge/Typescript-294E80.svg?style=for-the-badge&logo=typescript
 [typescript-url]:  "typescript"
