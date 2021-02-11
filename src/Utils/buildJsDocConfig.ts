@@ -1,9 +1,9 @@
 import resolveApiPaths from './resolveApis'
-import { JsDocConfig } from '@ioc:Adonis/Addons/Swagger'
+import swaggerJSDoc from 'swagger-jsdoc'
 
-export default function ({ apis, ...restOptions }: JsDocConfig): JsDocConfig {
+export default function ({ apis, ...restOptions }: swaggerJSDoc.Options): swaggerJSDoc.Options {
 	return {
 		...restOptions,
-		apis: resolveApiPaths(apis),
+		apis: resolveApiPaths(apis as string[]),
 	}
 }

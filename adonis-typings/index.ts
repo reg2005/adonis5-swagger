@@ -1,21 +1,22 @@
 declare module '@ioc:Adonis/Addons/Swagger' {
-	export interface JsDocConfig {
-		definition: {
-			openapi?: string
+	import swaggerJSDoc from 'swagger-jsdoc'
+	// export interface JsDocConfig {
+	// 	definition: {
+	// 		openapi?: string
 
-			info: {
-				title: string
+	// 		info: {
+	// 			title: string
 
-				version: string
+	// 			version: string
 
-				description: string
-			}
-		}
+	// 			description: string
+	// 		}
+	// 	}
 
-		apis: string[]
+	// 	apis: string[]
 
-		basePath?: string
-	}
+	// 	basePath?: string
+	// }
 
 	export type SwaggerMode = 'PRODUCTION' | 'RUNTIME'
 
@@ -27,7 +28,7 @@ declare module '@ioc:Adonis/Addons/Swagger' {
 
 		middleware: string[] // middlewares array, for protect your swagger docs and spec endpoints
 
-		options: JsDocConfig
+		options: swaggerJSDoc.Options
 
 		specFilePath?: string
 		mode?: SwaggerMode
