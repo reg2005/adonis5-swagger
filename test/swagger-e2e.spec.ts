@@ -1,10 +1,12 @@
 import test from 'japa'
 import supertest from 'supertest'
-import swaggerResponse from './fixtures/swagger.json'
-import swaggerConfig from './fixtures/swagger-config.json'
+import swaggerResponse from './fixtures/swagger'
+import swaggerConfig from './fixtures/swagger-config'
 import SwaggerProvider from '../providers/SwaggerProvider'
 import { AdonisApplication } from '../test-helpers/TestAdonisApp'
-import { SwaggerConfig } from '@ioc:Adonis/Addons/Swagger'
+import { SwaggerConfig, SwaggerMode } from '@ioc:Adonis/Addons/Swagger'
+import { join } from 'path'
+import { promises as fs } from 'fs'
 
 async function initServerWithSwaggerConfig(config: SwaggerConfig): Promise<AdonisApplication> {
 	return new AdonisApplication([], [])
@@ -20,6 +22,18 @@ test.group('Swagger e2e test - swagger enabled', () => {
 
 		const { text } = await supertest(httpServer.instance).get(swaggerConfig.specUrl).expect(200)
 		assert.equal(text, JSON.stringify(swaggerResponse))
+
+		await app.stopServer()
+	}).timeout(0)
+
+	test('Swagger enabled, should return swagger ui', async () => {
+		const app = await initServerWithSwaggerConfig(swaggerConfig)
+		const httpServer = app.iocContainer.use('Adonis/Core/Server')
+
+		await supertest(httpServer.instance)
+			.get(swaggerConfig.uiUrl + '/index.html')
+			.expect(200)
+			.expect('Content-Type', /html/)
 
 		await app.stopServer()
 	}).timeout(0)
@@ -54,5 +68,25 @@ test.group('Swagger e2e test - swagger enabled', () => {
 			.expect(404)
 
 		await app.stopServer()
+	}).timeout(0)
+
+	test('Swagger in production mode, should return content of swagger file', async (assert) => {
+		const testContent = { test: true }
+		const mode: SwaggerMode = 'PRODUCTION'
+		const testOptions = { specFilePath: 'docs/test.json', mode: mode }
+		const app = await initServerWithSwaggerConfig({ ...swaggerConfig, ...testOptions })
+		await fs.writeFile(
+			join(app.application.appRoot, testOptions.specFilePath),
+			JSON.stringify(testContent)
+		)
+
+		const httpServer = app.iocContainer.use('Adonis/Core/Server')
+
+		const { text } = await supertest(httpServer.instance).get(swaggerConfig.specUrl).expect(200)
+
+		assert.deepEqual(JSON.parse(text), testContent)
+
+		await app.stopServer()
+		await fs.unlink(join(app.application.appRoot, testOptions.specFilePath))
 	}).timeout(0)
 })

@@ -1,0 +1,11 @@
+export default {
+	openapi: '3.0.0',
+	info: {
+		title: 'Application with swagger docs',
+		version: '1.0.0',
+		description: 'My application with swagger docs',
+	},
+	paths: {},
+	components: {},
+	tags: [],
+}
