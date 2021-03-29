@@ -1,22 +1,24 @@
-import { IocContract } from '@adonisjs/fold/build'
 import Route from '@ioc:Adonis/Core/Route'
 import Config from '@ioc:Adonis/Core/Config'
 import { SwaggerController } from '../src/SwaggerController'
+import { Application } from '@adonisjs/application'
 
 export default class SwaggerProvider {
-	constructor(protected container: IocContract) {}
+	public static needsApplication = true
 
-	public register(): void {}
+	constructor(protected app: Application) {}
+
+	public async register(): Promise<void> {}
 
 	public async boot(): Promise<void> {
 		this.initSwaggerRoutes()
 	}
 
 	private initSwaggerRoutes() {
-		const config: typeof Config = this.container.use('Adonis/Core/Config')
-		const router: typeof Route = this.container.use('Adonis/Core/Route')
+		const config: typeof Config = this.app.container.resolveBinding('Adonis/Core/Config')
+		const router: typeof Route = this.app.container.resolveBinding('Adonis/Core/Route')
 
-		const controller = new SwaggerController(this.container)
+		const controller = new SwaggerController(this.app.container)
 		if (config.get('swagger.uiEnabled', true)) {
 			router
 				.get(

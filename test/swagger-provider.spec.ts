@@ -50,8 +50,8 @@ test.group('Swagger enabled', (group) => {
 	})
 
 	test('should instantiate provider with enabled swagger', async () => {
-		const swaggerProvider = new SwaggerProvider(app.iocContainer)
-		swaggerProvider.register()
+		const swaggerProvider = new SwaggerProvider(app.application)
+		await swaggerProvider.register()
 		await swaggerProvider.boot()
 
 		verify(configMock.get('swagger.uiEnabled', true)).once()
@@ -68,7 +68,7 @@ test.group('Swagger disabled', (group) => {
 	let testUrl = 'testUrl'
 	let configMock: ConfigContract
 	let routerMock: RouterContract
-	let app: AdonisApplication
+	let adonisApp: AdonisApplication
 
 	group.before(async () => {
 		configMock = mock(Config)
@@ -78,19 +78,19 @@ test.group('Swagger disabled', (group) => {
 		routerMock = mock(Router)
 		when(routerMock.get(testUrl, anything())).thenReturn({} as any)
 
-		app = await createAdonisApp({
+		adonisApp = await createAdonisApp({
 			'Adonis/Core/Config': instance(configMock),
 			'Adonis/Core/Route': instance(routerMock),
 		})
 	})
 
 	group.after(async () => {
-		await app.stopApp()
+		await adonisApp.stopApp()
 	})
 
 	test('should not init swagger module, swagger was disabled', async () => {
-		const swaggerProvider = new SwaggerProvider(app.iocContainer)
-		swaggerProvider.register()
+		const swaggerProvider = new SwaggerProvider(adonisApp.application)
+		await swaggerProvider.register()
 		await swaggerProvider.boot()
 
 		verify(configMock.get('swagger.specEnabled')).never()
