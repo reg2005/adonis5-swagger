@@ -6,13 +6,14 @@ import { join } from 'path'
 import { Application } from '@adonisjs/application'
 import { ContainerBindings } from '@ioc:Adonis/Core/Application'
 import { IocContract } from '@adonisjs/fold'
+import { execOneByOne } from '../execOneByOne'
 
 export interface AdonisProvider {
 	ready?: () => Promise<void>
 
 	shutdown?: () => Promise<void>
 
-	register(): void
+	register(): Promise<void>
 
 	boot(): Promise<void>
 }
@@ -22,7 +23,7 @@ export interface ApplicationConfig {
 	appConfig: object
 }
 
-export type ProviderConstructor = new (app: IocContract<ContainerBindings>) => AdonisProvider
+export type ProviderConstructor = new (app: Application) => AdonisProvider
 
 export class AdonisApplication {
 	private _httpServer: HttpServer
@@ -68,29 +69,31 @@ export class AdonisApplication {
 
 	private async initCustomProviders() {
 		this.customerProviderInstances = this.customProviders.map((Provider) => {
-			return new Provider(this._application.container)
+			return new Provider(this._application)
 		})
 	}
 
 	private async registerProviders() {
 		await this.application.setup()
-		this.application.registerProviders()
+		await this.application.registerProviders()
 		const { providersWithShutdownHook, providersWithReadyHook } = (this.application as any) as {
 			providersWithReadyHook: AdonisProvider[]
 			providersWithShutdownHook: AdonisProvider[]
 		}
 
-		this.customerProviderInstances.map((provider) => {
-			if (typeof provider.ready === 'function') {
-				providersWithReadyHook.push(provider)
-			}
+		execOneByOne(
+			this.customerProviderInstances.map((provider) => {
+				if (typeof provider.ready === 'function') {
+					providersWithReadyHook.push(provider)
+				}
 
-			if (typeof provider.shutdown === 'function') {
-				providersWithShutdownHook.push(provider)
-			}
+				if (typeof provider.shutdown === 'function') {
+					providersWithShutdownHook.push(provider)
+				}
 
-			provider.register()
-		})
+				return provider.register()
+			})
+		)
 	}
 
 	private async initApplicationConfigs() {
@@ -99,8 +102,8 @@ export class AdonisApplication {
 	}
 
 	private async bootProviders() {
-		this.customerProviderInstances.map((provider) => provider.boot())
 		await this.application.bootProviders()
+		await execOneByOne(this.customerProviderInstances.map((provider) => provider.boot()))
 	}
 
 	private async startHttpServer() {
