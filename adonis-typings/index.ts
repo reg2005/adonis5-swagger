@@ -32,5 +32,6 @@ declare module '@ioc:Adonis/Addons/Swagger' {
 
 		specFilePath?: string
 		mode?: SwaggerMode
+		swaggerUiDistPath?: string
 	}
 }
