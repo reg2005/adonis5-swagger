@@ -17,7 +17,8 @@ export class SwaggerController {
 	}
 
 	public async swaggerUI({ params, response }: HttpContextContract) {
-		const swaggerUiAssetPath = require('swagger-ui-dist').getAbsoluteFSPath()
+		const swaggerUiAssetPath =
+			this.config.get('swagger.swaggerUiDistPath') || require('swagger-ui-dist').getAbsoluteFSPath()
 		if (!params.fileName) {
 			return response.redirect('/docs/index.html')
 		}
