@@ -1,6 +1,6 @@
 {
   "name": "adonis5-swagger",
-  "version": "1.2.0",
+  "version": "1.2.2",
   "description": "Swagger provider for AdonisJS 5",
   "scripts": {
     "mrm": "mrm --preset=@adonisjs/mrm-preset",
