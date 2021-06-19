@@ -1,12 +1,12 @@
 import Route from '@ioc:Adonis/Core/Route'
 import Config from '@ioc:Adonis/Core/Config'
 import { SwaggerController } from '../src/SwaggerController'
-import { Application } from '@adonisjs/application'
+import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 
 export default class SwaggerProvider {
 	public static needsApplication = true
 
-	constructor(protected app: Application) {}
+	constructor(protected app: ApplicationContract) {}
 
 	public async register(): Promise<void> {}
 
