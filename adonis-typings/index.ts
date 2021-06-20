@@ -1,24 +1,24 @@
 declare module '@ioc:Adonis/Addons/Swagger' {
 	import swaggerJSDoc from 'swagger-jsdoc'
-	// export interface JsDocConfig {
-	// 	definition: {
-	// 		openapi?: string
-
-	// 		info: {
-	// 			title: string
-
-	// 			version: string
-
-	// 			description: string
-	// 		}
-	// 	}
-
-	// 	apis: string[]
-
-	// 	basePath?: string
-	// }
 
 	export type SwaggerMode = 'PRODUCTION' | 'RUNTIME'
+
+	export type CredentialsCheckFunction = (
+		login: string,
+		password: string
+	) => Promise<boolean> | boolean
+	export type AuthCredentials = {
+		login: string
+		password: string
+	}
+
+	export type SwaggerAuthConfig = {
+		authMiddleware: string
+
+		authCheck?: CredentialsCheckFunction
+
+		authCredentials?: AuthCredentials
+	}
 
 	export interface SwaggerConfig {
 		uiEnabled: boolean //disable or enable swaggerUi route
@@ -33,5 +33,7 @@ declare module '@ioc:Adonis/Addons/Swagger' {
 		specFilePath?: string
 		mode?: SwaggerMode
 		swaggerUiDistPath?: string
+
+		swaggerAuth?: SwaggerAuthConfig
 	}
 }

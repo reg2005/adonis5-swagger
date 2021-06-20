@@ -6,12 +6,16 @@ import { SwaggerConfig, SwaggerMode } from '@ioc:Adonis/Addons/Swagger'
 import { join } from 'path'
 import { promises as fs } from 'fs'
 import AdonisApplication from 'adonis-provider-tester'
+import { authWithCredentials } from './fixtures/swagger-auth-config'
+import { ServerContract } from '@ioc:Adonis/Core/Server'
+import { buildBasicAuthToken } from './utils/build-basic-auth-token'
 
 describe('Swagger e2e test - swagger enabled', () => {
 	async function initServer(config: SwaggerConfig): Promise<AdonisApplication> {
 		return new AdonisApplication([], [])
 			.registerProvider(SwaggerProvider)
 			.registerAppConfig({ configName: 'swagger', appConfig: config })
+			.registerNamedMiddleware('swagger-auth', 'Adonis/Addons/Swagger/AuthMiddleware')
 			.loadAppWithHttpServer()
 	}
 
@@ -87,5 +91,35 @@ describe('Swagger e2e test - swagger enabled', () => {
 		await fs.unlink(join(app.application.appRoot, 'test.json'))
 
 		await app.stopServer()
+	})
+
+	describe('Auth specs', () => {
+		let app: AdonisApplication
+		let httpServer: ServerContract
+
+		beforeAll(async () => {
+			const testOptions = { swaggerAuth: authWithCredentials }
+			app = await initServer({ ...swaggerConfig, ...testOptions })
+			httpServer = app.iocContainer.use('Adonis/Core/Server')
+		})
+
+		afterAll(async () => {
+			await app.stopServer()
+		})
+
+		it('Swagger auth failed, should return 401 response  with correct headers', async () => {
+			await supertest(httpServer.instance)
+				.get(swaggerConfig.specUrl)
+				.expect('WWW-Authenticate', 'Basic realm="Swagger docs"')
+				.expect(401)
+		})
+
+		it('Swagger auth passed, should return data', async () => {
+			const { login, password } = authWithCredentials.authCredentials as any
+			await supertest(httpServer.instance)
+				.get(swaggerConfig.specUrl)
+				.set('Authorization', `Basic ${buildBasicAuthToken({ login, password })}`)
+				.expect(200, swaggerResponse)
+		})
 	})
 })

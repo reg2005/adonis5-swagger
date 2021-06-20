@@ -17,6 +17,7 @@ Create API documentation easily in Adonis 5 using [Swagger](https://swagger.io/s
 - [Build swagger spec file](#build-swagger-spec-file)
 - [Swagger modes](#swagger-modes)
 - [Production using](#production-using)
+- [Swagger basic auth](#swagger-basic-auth)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -241,6 +242,51 @@ const swaggerConfig = {
 ```
 - Deliver your source code to production server.
 
+
+# Swagger basic auth
+
+Package supports auth via basic auth schema. For using auth you should add config in `config/swagger.ts` 
+
+```ts
+import Env from '@ioc:Adonis/Core/Env'
+
+export default {
+	// ...Swagger congig
+	swaggerAuth: {
+		authMiddleware: 'swagger-auth',
+
+		authCredentials: {
+			login: Env.get('SWAGGER_AUTH_LOGIN'),
+			password: Env.get('SWAGGER_AUTH_PASSWORD')
+		}
+	}
+}
+```
+Register auth middleware in your `start/kernel.ts`
+```ts
+Server.middleware.registerNamed({
+  'swagger-auth': 'Adonis/Addons/Swagger/AuthMiddleware',
+})
+```
+
+That's all. Your swagger docs secured by basic auth.
+
+Instead of using credentials, you can use function for verifying access in more complex way.
+```ts
+import Env from '@ioc:Adonis/Core/Env'
+import { verifyDocsAccess } from 'App/Services/Auth/Docs'
+
+export default {
+	// ...Swagger congig
+	swaggerAuth: {
+		authMiddleware: 'swagger-auth',
+
+		authCheck: async (login, password) => {
+			return await verifyDocsAccess({ login, password })
+		}
+	}
+}
+```
 
 [typescript-image]: https://img.shields.io/badge/Typescript-294E80.svg?style=for-the-badge&logo=typescript
 [typescript-url]:  "typescript"
