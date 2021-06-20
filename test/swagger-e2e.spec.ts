@@ -1,33 +1,37 @@
-import test from 'japa'
 import supertest from 'supertest'
 import swaggerResponse from './fixtures/swagger'
 import swaggerConfig from './fixtures/swagger-config'
 import SwaggerProvider from '../providers/SwaggerProvider'
-import { AdonisApplication } from '../test-helpers/TestAdonisApp'
 import { SwaggerConfig, SwaggerMode } from '@ioc:Adonis/Addons/Swagger'
 import { join } from 'path'
 import { promises as fs } from 'fs'
+import AdonisApplication from 'adonis-provider-tester'
+import { authWithCredentials } from './fixtures/swagger-auth-config'
+import { ServerContract } from '@ioc:Adonis/Core/Server'
+import { buildBasicAuthToken } from './utils/build-basic-auth-token'
 
-async function initServerWithSwaggerConfig(config: SwaggerConfig): Promise<AdonisApplication> {
-	return new AdonisApplication([], [])
-		.registerProvider(SwaggerProvider)
-		.registerAppConfig({ configName: 'swagger', appConfig: config })
-		.loadAppWithHttpServer()
-}
+describe('Swagger e2e test - swagger enabled', () => {
+	async function initServer(config: SwaggerConfig): Promise<AdonisApplication> {
+		return new AdonisApplication([], [])
+			.registerProvider(SwaggerProvider)
+			.registerAppConfig({ configName: 'swagger', appConfig: config })
+			.registerNamedMiddleware('swagger-auth', 'Adonis/Addons/Swagger/AuthMiddleware')
+			.loadAppWithHttpServer()
+	}
 
-test.group('Swagger e2e test - swagger enabled', () => {
-	test('Swagger enabled, should return swagger JSON from mounted endpoint', async (assert) => {
-		const app = await initServerWithSwaggerConfig(swaggerConfig)
+	it('Swagger enabled, should return swagger JSON from mounted endpoint', async () => {
+		const app = await initServer(swaggerConfig)
 		const httpServer = app.iocContainer.use('Adonis/Core/Server')
 
 		const { text } = await supertest(httpServer.instance).get(swaggerConfig.specUrl).expect(200)
-		assert.equal(text, JSON.stringify(swaggerResponse))
+
+		expect(text).toEqual(JSON.stringify(swaggerResponse))
 
 		await app.stopServer()
-	}).timeout(0)
+	})
 
-	test('Swagger enabled, should return swagger ui', async () => {
-		const app = await initServerWithSwaggerConfig(swaggerConfig)
+	it('Swagger enabled, should return swagger ui', async () => {
+		const app = await initServer(swaggerConfig)
 		const httpServer = app.iocContainer.use('Adonis/Core/Server')
 
 		await supertest(httpServer.instance)
@@ -36,10 +40,10 @@ test.group('Swagger e2e test - swagger enabled', () => {
 			.expect('Content-Type', /html/)
 
 		await app.stopServer()
-	}).timeout(0)
+	})
 
-	test('Swagger enabled, should return swagger ui', async () => {
-		const app = await initServerWithSwaggerConfig(swaggerConfig)
+	it('Swagger enabled, should return swagger ui', async () => {
+		const app = await initServer(swaggerConfig)
 		const httpServer = app.iocContainer.use('Adonis/Core/Server')
 
 		await supertest(httpServer.instance)
@@ -48,19 +52,20 @@ test.group('Swagger e2e test - swagger enabled', () => {
 			.expect('Content-Type', /html/)
 
 		await app.stopServer()
-	}).timeout(0)
+	})
 
-	test('Swagger disabled, should return 404, route is not mounted', async () => {
-		const app = await initServerWithSwaggerConfig({ ...swaggerConfig, specEnabled: false })
+	it('Swagger disabled, should return 404, route is not mounted', async () => {
+		const app = await initServer({ ...swaggerConfig, specEnabled: false })
 		const httpServer = app.iocContainer.use('Adonis/Core/Server')
 
-		await supertest(httpServer.instance).get('/swagger.json').expect(404)
+		await supertest(httpServer.instance).get('/swagger.json').expect(404, {})
 
 		await app.stopServer()
-	}).timeout(0)
+	})
 
-	test('Swagger ui disabled, should return 404 response', async () => {
-		const app = await initServerWithSwaggerConfig({ ...swaggerConfig, uiEnabled: false })
+	it('Swagger ui disabled, should return 404 response', async () => {
+		const app = await initServer({ ...swaggerConfig, uiEnabled: false })
+
 		const httpServer = app.iocContainer.use('Adonis/Core/Server')
 
 		await supertest(httpServer.instance)
@@ -68,25 +73,53 @@ test.group('Swagger e2e test - swagger enabled', () => {
 			.expect(404)
 
 		await app.stopServer()
-	}).timeout(0)
+	})
 
-	test('Swagger in production mode, should return content of swagger file', async (assert) => {
+	it('Swagger in production mode, should return content of swagger file', async () => {
 		const testContent = { test: true }
 		const mode: SwaggerMode = 'PRODUCTION'
-		const testOptions = { specFilePath: 'docs/test.json', mode: mode }
-		const app = await initServerWithSwaggerConfig({ ...swaggerConfig, ...testOptions })
-		await fs.writeFile(
-			join(app.application.appRoot, testOptions.specFilePath),
-			JSON.stringify(testContent)
-		)
 
+		const testOptions = { specFilePath: 'test.json', mode: mode }
+
+		const app = await initServer({ ...swaggerConfig, ...testOptions })
+
+		await fs.writeFile(join(app.application.appRoot, 'test.json'), JSON.stringify(testContent))
 		const httpServer = app.iocContainer.use('Adonis/Core/Server')
 
-		const { text } = await supertest(httpServer.instance).get(swaggerConfig.specUrl).expect(200)
+		await supertest(httpServer.instance).get(swaggerConfig.specUrl).expect(200, testContent)
 
-		assert.deepEqual(JSON.parse(text), testContent)
+		await fs.unlink(join(app.application.appRoot, 'test.json'))
 
 		await app.stopServer()
-		await fs.unlink(join(app.application.appRoot, testOptions.specFilePath))
-	}).timeout(0)
+	})
+
+	describe('Auth specs', () => {
+		let app: AdonisApplication
+		let httpServer: ServerContract
+
+		beforeAll(async () => {
+			const testOptions = { swaggerAuth: authWithCredentials }
+			app = await initServer({ ...swaggerConfig, ...testOptions })
+			httpServer = app.iocContainer.use('Adonis/Core/Server')
+		})
+
+		afterAll(async () => {
+			await app.stopServer()
+		})
+
+		it('Swagger auth failed, should return 401 response  with correct headers', async () => {
+			await supertest(httpServer.instance)
+				.get(swaggerConfig.specUrl)
+				.expect('WWW-Authenticate', 'Basic realm="Swagger docs"')
+				.expect(401)
+		})
+
+		it('Swagger auth passed, should return data', async () => {
+			const { login, password } = authWithCredentials.authCredentials as any
+			await supertest(httpServer.instance)
+				.get(swaggerConfig.specUrl)
+				.set('Authorization', `Basic ${buildBasicAuthToken({ login, password })}`)
+				.expect(200, swaggerResponse)
+		})
+	})
 })
