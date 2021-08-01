@@ -10,7 +10,6 @@ import { join } from 'path'
 
 export class SwaggerController {
 	private config: ConfigContract
-	private swaggerFileContent: String | null = null
 
 	constructor(protected IoC: IocContract) {
 		this.config = IoC.use('Adonis/Core/Config')
@@ -36,22 +35,17 @@ export class SwaggerController {
 		return response.header('Content-Type', contentType).send(data)
 	}
 
-	public async swaggerFile() {
-		if (this.config.get('swagger.mode', 'RUNTIME') === 'RUNTIME') {
-			return swaggerJSDoc(buildJsDocConfig(this.config.get('swagger.options', {})))
-		} else if (this.config.get('swagger.mode', 'RUNTIME') === 'PRODUCTION') {
-			return this.getSwaggerSpecFileContent()
-		}
+	public async swaggerFile(): Promise<swaggerJSDoc.Options> {
+		const mode = this.config.get('swagger.mode', 'RUNTIME')
+		return mode === 'RUNTIME'
+			? swaggerJSDoc(buildJsDocConfig(this.config.get('swagger.options', {})))
+			: this.getSwaggerSpecFileContent()
 	}
 
-	private async getSwaggerSpecFileContent() {
-		if (!this.swaggerFileContent) {
-			const app: Application = this.IoC.use('Adonis/Core/Application')
-			const filePath = join(app.appRoot, this.config.get('swagger.specFilePath'))
-			const fileContent = await fs.readFile(filePath)
-			this.swaggerFileContent = JSON.parse(fileContent.toString())
-		}
-
-		return this.swaggerFileContent
+	private async getSwaggerSpecFileContent(): Promise<swaggerJSDoc.Options> {
+		const app: Application = this.IoC.use('Adonis/Core/Application')
+		const filePath = join(app.appRoot, this.config.get('swagger.specFilePath'))
+		const fileContent = await fs.readFile(filePath)
+		return JSON.parse(fileContent.toString())
 	}
 }
