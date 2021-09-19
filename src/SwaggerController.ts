@@ -20,7 +20,8 @@ export class SwaggerController {
 		const swaggerUiAssetPath =
 			this.config.get('swagger.swaggerUiDistPath') || require('swagger-ui-dist').getAbsoluteFSPath()
 		if (!params.fileName) {
-			return response.redirect('/docs/index.html')
+			const baseUrl = this.config.get('swagger.uiUrl', '/docs').replace('/', '')
+			return response.redirect(`/${baseUrl}/index.html`)
 		}
 		let fileName = params.fileName ? params.fileName : 'index.html'
 		const path = join(swaggerUiAssetPath, fileName)
