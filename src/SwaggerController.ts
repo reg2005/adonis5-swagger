@@ -3,17 +3,20 @@ import { ConfigContract } from '@ioc:Adonis/Core/Config'
 import mime from 'mime'
 import buildJsDocConfig from './Utils/buildJsDocConfig'
 import swaggerJSDoc from 'swagger-jsdoc'
-import { promises as fs } from 'fs'
+import * as fs from 'fs'
+import { promises as fsp } from 'fs'
 import { Application } from '@adonisjs/application'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { join } from 'path'
+import { ReadStream } from 'fs'
 
 export class SwaggerController {
 	private config: ConfigContract
-	private swaggerFileContent: String | null = null
+	private app: Application
 
 	constructor(protected IoC: IocContract) {
 		this.config = IoC.use('Adonis/Core/Config')
+		this.app = this.IoC.use('Adonis/Core/Application')
 	}
 
 	public async swaggerUI({ params, response }: HttpContextContract) {
@@ -26,7 +29,7 @@ export class SwaggerController {
 		let fileName = params.fileName ? params.fileName : 'index.html'
 		const path = join(swaggerUiAssetPath, fileName)
 		const contentType = mime.getType(path)
-		let data = await fs.readFile(path, 'utf-8')
+		let data = await fsp.readFile(path, 'utf-8')
 		if (fileName.includes('index.html')) {
 			//replace default host from index.html
 			data = data.replace(
@@ -37,22 +40,21 @@ export class SwaggerController {
 		return response.header('Content-Type', contentType).send(data)
 	}
 
-	public async swaggerFile() {
-		if (this.config.get('swagger.mode', 'RUNTIME') === 'RUNTIME') {
-			return swaggerJSDoc(buildJsDocConfig(this.config.get('swagger.options', {})))
-		} else if (this.config.get('swagger.mode', 'RUNTIME') === 'PRODUCTION') {
-			return this.getSwaggerSpecFileContent()
+	public async swaggerFile({ response }: HttpContextContract): Promise<void> {
+		const mode = this.config.get('swagger.mode', 'RUNTIME')
+		if (mode === 'RUNTIME') {
+			response.send(swaggerJSDoc(buildJsDocConfig(this.config.get('swagger.options', {}))))
+		} else {
+			response
+				.safeHeader('Content-type', 'application/json')
+				.stream(this.getSwaggerSpecFileContent(), () => {
+					return ['Unable to find file', 404]
+				})
 		}
 	}
 
-	private async getSwaggerSpecFileContent() {
-		if (!this.swaggerFileContent) {
-			const app: Application = this.IoC.use('Adonis/Core/Application')
-			const filePath = join(app.appRoot, this.config.get('swagger.specFilePath'))
-			const fileContent = await fs.readFile(filePath)
-			this.swaggerFileContent = JSON.parse(fileContent.toString())
-		}
-
-		return this.swaggerFileContent
+	private getSwaggerSpecFileContent(): ReadStream {
+		const filePath = join(this.app.appRoot, this.config.get('swagger.specFilePath'))
+		return fs.createReadStream(filePath)
 	}
 }
