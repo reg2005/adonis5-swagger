@@ -44,10 +44,10 @@
   "types": "build/adonis-typings/index.d.ts",
   "typings": "build/adonis-typings/index.d.ts",
   "devDependencies": {
-    "@adonisjs/assembler": "^5.3.2",
-    "@adonisjs/core": "^5.1.11",
-    "@adonisjs/mrm-preset": "^4.1.0",
-    "@poppinss/dev-utils": "^1.1.4",
+    "@adonisjs/assembler": "^5.3.7",
+    "@adonisjs/core": "^5.3.4",
+    "@adonisjs/mrm-preset": "^4.1.2",
+    "@poppinss/dev-utils": "^1.1.5",
     "@types/jest": "^27.0.1",
     "@types/node": "^14.17.11",
     "@types/swagger-jsdoc": "^6.0.1",
@@ -82,7 +82,7 @@
   "dependencies": {
     "mime": "^2.5.2",
     "swagger-jsdoc": "^6.1.0",
-    "swagger-ui-dist": "^3.52.0"
+    "swagger-ui-dist": "^3.52.2"
   },
   "husky": {
     "hooks": {
