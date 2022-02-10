@@ -18,6 +18,8 @@ Create API documentation easily in Adonis 5 using [Swagger](https://swagger.io/s
 - [Swagger modes](#swagger-modes)
 - [Production using](#production-using)
 - [Swagger basic auth](#swagger-basic-auth)
+- [Recipes](#recipes)
+  - [JWT auth for endpoints](#jwt-auth-for-endpoints)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -42,61 +44,84 @@ node ace invoke adonis5-swagger
   ```
 
 * Create `TestController` using `node ace make:controller Test` command:
-  ```js
-  import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-  
-  export default class TestController {
-    /**
-    * @swagger
-    * /api/hello:
-    *   get:
-    *     tags:
-    *       - Test
-    *     summary: Sample API
-    *     parameters:
-    *       - name: name
-    *         description: Name of the user
-    *         in: query
-    *         required: false
-    *         type: string
-    *     responses:
-    *       200:
-    *         description: Send hello message
-    *         example:
-    *           message: Hello Guess
-    */
-    public async hello({ request, response }: HttpContextContract) {
-      const name = request.input('name', 'Guess')
-      return response.send({ message: 'Hello ' + name })
-    }
-  }
-  ```
+
+```js
+	import { HttpContextContract } from "@ioc:Adonis/Core/HttpContext";
+	import User from "App/Models/User";
+
+	export default class UsersController {
+		/**
+		* @swagger
+		* /api/users:
+		* post:
+		*     tags:
+		*       - Users
+		*     requestBody:
+		*       required: true
+		*       content:
+		*         application/json:
+		*           description: User payload
+		*           schema:
+		*             type: object
+		*             properties:
+		*               phone:
+		*                 type: string
+		*                 example: 'James Bond'
+		*                 required: true
+		*               email:
+		*                 type: string
+		*                 example: 'Bond007@example.com'
+		*                 required: true
+		*     produces:
+		*       - application/json
+		*     responses:
+		*       200:
+		*         description: Success
+		*         content:
+		*           application/json:
+		*             schema:
+		*               $ref: '#/components/schemas/User'
+		*/
+		public async create({ request, response }: HttpContextContract): Promise<User> {
+				// User saving and returns
+		}
+	}
+```
 
 * You can also define the schema in the Models:
-  ```js
-  import { BaseModel } from '@ioc:Adonis/Lucid/Orm'
-  
-  /** 
-  *  @swagger
-  *  definitions:
-  *    User:
-  *      type: object
-  *      properties:
-  *        id:
-  *          type: uint
-  *        username:
-  *          type: string
-  *        email:
-  *          type: string
-  *        password:
-  *          type: string
-  *      required:
-  *        - username
-  *        - email
-  *        - password
-  */
-  export default class User extends BaseModel {
-  }
+```js
+		import {DateTime} from 'luxon'
+		import {BaseModel, column} from '@ioc:Adonis/Lucid/Orm'
+
+		/**
+		* @swagger
+		* components:
+			* schemas:
+			*      User:
+			*        type: object
+			*        properties:
+			*          name:
+			*            type: string
+			*          email:
+			*            type: string
+			* 
+		*/
+		export default class User extends BaseModel {
+		@column({isPrimary: true})
+		public id: number
+		
+		@column()
+		public name: string
+		
+		@column()
+		public email: string
+		
+		@column.dateTime({autoCreate: true})
+		public createdAt: DateTime
+		
+		@column.dateTime({autoCreate: true, autoUpdate: true})
+		public updatedAt: DateTime
+	}
   ```
 
 * Or create a separate file containing documentation from the APIs in either TS or YAML formats, sample structure:
@@ -286,6 +311,54 @@ export default {
 		}
 	}
 }
+```
+
+# Recipes
+
+## JWT auth for endpoints
+
+Define JWT component inside your `.yaml` declaration:
+```
+components:
+	securitySchemes:
+		bearerAuth:            
+		type: http
+		scheme: bearer
+		bearerFormat: JWT 
+```
+Or add to your swagger config:
+```ts
+export default {
+	// ... config options
+	options: {
+		definition: {
+		openapi: '3.0.0',
+		info: {
+			title: 'Application with swagger docs',
+			version: '1.0.0',
+			description: 'My application with swagger docs'
+		},
+		components: {
+			securitySchemes: {
+			bearerAuth: {
+				type: "http",
+				scheme: "bearer",
+				bearerFormat: "JWT"
+			}
+			}
+		}
+		}
+	//... config options
+	}
+} as SwaggerConfig
+```
+Then you can add to your controller auth security option:
+```
+@swagger
+/api/users:
+post:
+	security:
+	- bearerAuth: []
 ```
 
 [typescript-image]: https://img.shields.io/badge/Typescript-294E80.svg?style=for-the-badge&logo=typescript
