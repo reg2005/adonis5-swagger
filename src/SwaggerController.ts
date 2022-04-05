@@ -26,18 +26,24 @@ export class SwaggerController {
 			const baseUrl = this.config.get('swagger.uiUrl', '/docs').replace('/', '')
 			return response.redirect(`/${baseUrl}/index.html`)
 		}
-		let fileName = params.fileName ? params.fileName : 'index.html'
+
+		const fileName = params.fileName ? params.fileName : 'index.html'
 		const path = join(swaggerUiAssetPath, fileName)
 		const contentType = mime.getType(path)
-		let data = await fsp.readFile(path, 'utf-8')
-		if (fileName.includes('index.html')) {
-			//replace default host from index.html
-			data = data.replace(
-				'https://petstore.swagger.io/v2/swagger.json',
-				this.config.get('swagger.specUrl')
-			)
+
+		if (fileName.includes('initializer')) {
+			const initializer = await fsp.readFile(path, 'utf-8')
+			return response
+				.header('Content-Type', contentType)
+				.send(
+					initializer.replace(
+						'https://petstore.swagger.io/v2/swagger.json',
+						this.config.get('swagger.specUrl')
+					)
+				)
+		} else {
+			return response.header('Content-Type', contentType).stream(fs.createReadStream(path))
 		}
-		return response.header('Content-Type', contentType).send(data)
 	}
 
 	public async swaggerFile({ response }: HttpContextContract): Promise<void> {
@@ -53,7 +59,7 @@ export class SwaggerController {
 		}
 	}
 
-	private getSwaggerSpecFileContent(): ReadStream {
+	protected getSwaggerSpecFileContent(): ReadStream {
 		const filePath = join(this.app.appRoot, this.config.get('swagger.specFilePath'))
 		return fs.createReadStream(filePath)
 	}
